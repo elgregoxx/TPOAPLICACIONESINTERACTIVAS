@@ -1,12 +1,9 @@
 package com.uade.tpo.marketplace.dto.request;
 
-import com.uade.tpo.marketplace.model.Role;
 import lombok.Data;
 
 @Data
-public class CreateUserRequest {
-    private String name;
+public class LoginRequest {
     private String email;
     private String password;
-    private Role role;
 }

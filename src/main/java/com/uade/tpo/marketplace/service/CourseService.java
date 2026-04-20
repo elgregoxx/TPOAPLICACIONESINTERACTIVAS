@@ -7,60 +7,57 @@ import com.uade.tpo.marketplace.model.Course;
 import com.uade.tpo.marketplace.model.Role;
 import com.uade.tpo.marketplace.model.User;
 import com.uade.tpo.marketplace.repository.CourseRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserService userService;
 
-    public CourseService(CourseRepository courseRepository, UserService userService) {
-        this.courseRepository = courseRepository;
-        this.userService = userService;
+    public List<CourseResponse> getAllCourses() {
+        return courseRepository.findAll().stream().map(CourseResponse::from).toList();
     }
 
-    public List<CourseResponse> getAllCourses() {
-        return courseRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    public CourseResponse getCourseById(Long id) {
+        return CourseResponse.from(findEntityById(id));
     }
 
     public CourseResponse createCourse(CreateCourseRequest request) {
         User teacher = userService.findEntityById(request.getTeacherId());
-
-        if (teacher.getRole() != Role.TEACHER) {
+        if (teacher.getRole() != Role.ROLE_TEACHER && teacher.getRole() != Role.ROLE_ADMIN) {
             throw new IllegalArgumentException("El usuario indicado no es un profesor");
         }
+        Course course = Course.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .durationInMinutes(request.getDurationInMinutes())
+                .teacher(teacher)
+                .build();
+        return CourseResponse.from(courseRepository.save(course));
+    }
 
-        Course course = new Course();
+    public CourseResponse updateCourse(Long id, CreateCourseRequest request) {
+        Course course = findEntityById(id);
+        User teacher = userService.findEntityById(request.getTeacherId());
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
         course.setDurationInMinutes(request.getDurationInMinutes());
-        course.setTeacherId(request.getTeacherId());
+        course.setTeacher(teacher);
+        return CourseResponse.from(courseRepository.save(course));
+    }
 
-        Course savedCourse = courseRepository.save(course);
-        return mapToResponse(savedCourse);
+    public void deleteCourse(Long id) {
+        findEntityById(id);
+        courseRepository.deleteById(id);
     }
 
     public Course findEntityById(Long id) {
         return courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Clase no encontrada con id " + id));
-    }
-
-    public CourseResponse mapToResponse(Course course) {
-        User teacher = userService.findEntityById(course.getTeacherId());
-
-        return new CourseResponse(
-                course.getId(),
-                course.getTitle(),
-                course.getDescription(),
-                course.getDurationInMinutes(),
-                course.getTeacherId(),
-                teacher.getName()
-        );
+                .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con id: " + id));
     }
 }

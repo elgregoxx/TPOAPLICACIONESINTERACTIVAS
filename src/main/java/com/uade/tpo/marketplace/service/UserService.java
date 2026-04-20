@@ -5,33 +5,47 @@ import com.uade.tpo.marketplace.dto.response.UserResponse;
 import com.uade.tpo.marketplace.exception.ResourceNotFoundException;
 import com.uade.tpo.marketplace.model.User;
 import com.uade.tpo.marketplace.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream().map(UserResponse::from).toList();
     }
 
     public UserResponse createUser(CreateUserRequest request) {
-        User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setRole(request.getRole());
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("El email ya está registrado");
+        }
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())
+                .build();
+        return UserResponse.from(userRepository.save(user));
+    }
 
-        User savedUser = userRepository.save(user);
-        return mapToResponse(savedUser);
+    public UserResponse getUserById(Long id) {
+        return UserResponse.from(findEntityById(id));
+    }
+
+    public void deleteUser(Long id) {
+        findEntityById(id);
+        userRepository.deleteById(id);
     }
 
     public User findEntityById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id " + id));
-    }
-
-    public UserResponse mapToResponse(User user) {
-        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole());
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 }
