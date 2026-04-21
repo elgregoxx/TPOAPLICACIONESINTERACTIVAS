@@ -1,9 +1,7 @@
 package com.uade.tpo.marketplace.dto.response;
 
 import com.uade.tpo.marketplace.model.Enrollment;
-import lombok.Data;
 
-@Data
 public class EnrollmentResponse {
     private Long id;
     private Long studentId;
@@ -22,4 +20,11 @@ public class EnrollmentResponse {
         r.status = e.getStatus();
         return r;
     }
+
+    public Long getId() { return id; }
+    public Long getStudentId() { return studentId; }
+    public String getStudentName() { return studentName; }
+    public Long getCourseId() { return courseId; }
+    public String getCourseTitle() { return courseTitle; }
+    public String getStatus() { return status; }
 }

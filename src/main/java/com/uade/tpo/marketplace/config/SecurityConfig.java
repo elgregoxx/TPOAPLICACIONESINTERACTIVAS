@@ -1,7 +1,6 @@
 package com.uade.tpo.marketplace.config;
 
 import com.uade.tpo.marketplace.security.JwtAuthFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,11 +22,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserDetailsService userDetailsService) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -35,24 +38,18 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Público
                 .requestMatchers("/api/auth/**").permitAll()
-                // Solo ADMIN puede crear/eliminar usuarios y ver todos los usuarios
                 .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-                // Solo TEACHER o ADMIN pueden crear/editar cursos
                 .requestMatchers(HttpMethod.POST, "/api/classes").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
                 .requestMatchers(HttpMethod.PUT, "/api/classes/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
                 .requestMatchers(HttpMethod.DELETE, "/api/classes/**").hasAuthority("ROLE_ADMIN")
-                // Ver cursos: cualquier autenticado
                 .requestMatchers(HttpMethod.GET, "/api/classes/**").authenticated()
-                // Inscripciones: STUDENT o ADMIN
                 .requestMatchers("/api/enrollments/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
                 .requestMatchers("/api/students/**").authenticated()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 

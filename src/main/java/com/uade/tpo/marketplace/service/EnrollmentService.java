@@ -8,18 +8,22 @@ import com.uade.tpo.marketplace.model.Enrollment;
 import com.uade.tpo.marketplace.model.Role;
 import com.uade.tpo.marketplace.model.User;
 import com.uade.tpo.marketplace.repository.EnrollmentRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final UserService userService;
     private final CourseService courseService;
+
+    public EnrollmentService(EnrollmentRepository enrollmentRepository, UserService userService, CourseService courseService) {
+        this.enrollmentRepository = enrollmentRepository;
+        this.userService = userService;
+        this.courseService = courseService;
+    }
 
     public EnrollmentResponse createEnrollment(CreateEnrollmentRequest request) {
         User student = userService.findEntityById(request.getStudentId());
@@ -27,18 +31,13 @@ public class EnrollmentService {
             throw new IllegalArgumentException("El usuario indicado no es un alumno");
         }
         Course course = courseService.findEntityById(request.getCourseId());
-        Enrollment enrollment = Enrollment.builder()
-                .student(student)
-                .course(course)
-                .status("ENROLLED")
-                .build();
+        Enrollment enrollment = Enrollment.builder().student(student).course(course).status("ENROLLED").build();
         return EnrollmentResponse.from(enrollmentRepository.save(enrollment));
     }
 
     public List<EnrollmentResponse> getEnrollmentsByStudentId(Long studentId) {
         userService.findEntityById(studentId);
-        return enrollmentRepository.findByStudentId(studentId).stream()
-                .map(EnrollmentResponse::from).toList();
+        return enrollmentRepository.findByStudentId(studentId).stream().map(EnrollmentResponse::from).toList();
     }
 
     public List<EnrollmentResponse> getAllEnrollments() {

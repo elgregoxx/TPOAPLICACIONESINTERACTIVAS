@@ -1,9 +1,7 @@
 package com.uade.tpo.marketplace.dto.response;
 
 import com.uade.tpo.marketplace.model.Course;
-import lombok.Data;
 
-@Data
 public class CourseResponse {
     private Long id;
     private String title;
@@ -22,4 +20,11 @@ public class CourseResponse {
         r.teacherName = course.getTeacher().getName();
         return r;
     }
+
+    public Long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public Integer getDurationInMinutes() { return durationInMinutes; }
+    public Long getTeacherId() { return teacherId; }
+    public String getTeacherName() { return teacherName; }
 }

@@ -2,9 +2,7 @@ package com.uade.tpo.marketplace.dto.response;
 
 import com.uade.tpo.marketplace.model.Role;
 import com.uade.tpo.marketplace.model.User;
-import lombok.Data;
 
-@Data
 public class UserResponse {
     private Long id;
     private String name;
@@ -19,4 +17,9 @@ public class UserResponse {
         r.role = user.getRole();
         return r;
     }
+
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public Role getRole() { return role; }
 }

@@ -7,17 +7,20 @@ import com.uade.tpo.marketplace.model.Course;
 import com.uade.tpo.marketplace.model.Role;
 import com.uade.tpo.marketplace.model.User;
 import com.uade.tpo.marketplace.repository.CourseRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserService userService;
+
+    public CourseService(CourseRepository courseRepository, UserService userService) {
+        this.courseRepository = courseRepository;
+        this.userService = userService;
+    }
 
     public List<CourseResponse> getAllCourses() {
         return courseRepository.findAll().stream().map(CourseResponse::from).toList();
@@ -32,12 +35,8 @@ public class CourseService {
         if (teacher.getRole() != Role.ROLE_TEACHER && teacher.getRole() != Role.ROLE_ADMIN) {
             throw new IllegalArgumentException("El usuario indicado no es un profesor");
         }
-        Course course = Course.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .durationInMinutes(request.getDurationInMinutes())
-                .teacher(teacher)
-                .build();
+        Course course = Course.builder().title(request.getTitle()).description(request.getDescription())
+                .durationInMinutes(request.getDurationInMinutes()).teacher(teacher).build();
         return CourseResponse.from(courseRepository.save(course));
     }
 

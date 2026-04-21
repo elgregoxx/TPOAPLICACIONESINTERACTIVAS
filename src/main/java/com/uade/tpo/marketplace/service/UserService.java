@@ -5,18 +5,21 @@ import com.uade.tpo.marketplace.dto.response.UserResponse;
 import com.uade.tpo.marketplace.exception.ResourceNotFoundException;
 import com.uade.tpo.marketplace.model.User;
 import com.uade.tpo.marketplace.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream().map(UserResponse::from).toList();
@@ -27,11 +30,9 @@ public class UserService {
             throw new IllegalArgumentException("El email ya está registrado");
         }
         User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
+                .name(request.getName()).email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .build();
+                .role(request.getRole()).build();
         return UserResponse.from(userRepository.save(user));
     }
 
